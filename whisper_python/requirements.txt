@@ -1,0 +1,4 @@
+Flask
+openai-whisper
+ffmpeg-python
+snowflake-ml-python

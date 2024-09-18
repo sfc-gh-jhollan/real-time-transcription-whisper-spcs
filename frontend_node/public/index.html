@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Transcription App</title>
+</head>
+
+<body>
+    <h1>Real-Time Audio Transcription</h1>
+    <button id="startBtn">Start Recording</button>
+    <button id="stopBtn">Stop Recording</button>
+    <p>Status: <span id="status">Not recording</span></p>
+    <p>Transcription: <span id="transcription"></span></p>
+    <script>
+        const startBtn = document.getElementById('startBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const status = document.getElementById('status');
+        const transcription = document.getElementById('transcription');
+
+        let mediaRecorder;
+        let audioChunks = [];
+        let ws = new WebSocket('ws://localhost:3000');
+
+        ws.onmessage = function (event) {
+            console.log('Message from server ', event.data);
+            transcription.textContent += event.data + ' ';
+        };
+
+        startBtn.onclick = function () {
+            navigator.mediaDevices.getUserMedia({ audio: true })
+                .then(stream => {
+                    console.log('Got MediaStream:', stream);
+                    mediaRecorder = new MediaRecorder(stream);
+                    mediaRecorder.start(5000);
+                    console.log('MediaRecorder started')
+                    status.textContent = 'Recording...';
+
+                    mediaRecorder.ondataavailable = function (event) {
+                        const reader = new FileReader();
+                        console.log('Data available');
+                        reader.onload = function () {
+                            console.log('Sending data to server');
+                            ws.send(reader.result);
+                        };
+                        reader.onerror = function (error) {
+                            console.log('Error reading file:', error);
+                        };
+                        reader.readAsArrayBuffer(event.data);
+                    };
+                });
+        };
+
+        stopBtn.onclick = function () {
+            mediaRecorder.stop();
+            status.textContent = 'Stopped';
+        };
+
+        ws.onopen = function () {
+            console.log('WebSocket connection established');
+        };
+    </script>
+</body>
+
+</html>

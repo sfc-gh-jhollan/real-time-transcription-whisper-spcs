@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Audio Recorder</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #003545;
+            color: #ecf0f1;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1 {
+            color: #ecf0f1;
+            text-align: center;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: #000000BF;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .button {
+            display: inline-block;
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 5px;
+            background-color: #29B5E8;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            margin-right: 10px;
+            transition: background-color 0.3s;
+        }
+
+        .button:hover {
+            background-color: #11567F;
+        }
+
+        #transcript {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+            min-height: 100px;
+            color: #2c3e50;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-size: 18px;
+        }
+
+        #transcript div {
+            margin: 0;
+            padding: 0;
+        }
+
+        #summary {
+            background-color: #ecf0f1;
+            color: #2c3e50;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 20px;
+            min-height: 100px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-size: 18px;
+            line-height: 1.6;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .pulsating-circle {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translateX(-50%) translateY(-50%);
+            width: 120px;
+            height: 120px;
+
+            &:before {
+                content: '';
+                position: relative;
+                display: block;
+                width: 300%;
+                height: 300%;
+                box-sizing: border-box;
+                margin-left: -100%;
+                margin-top: -100%;
+                border-radius: 240px;
+                background-color: #01a4e9;
+                animation: pulse-ring 1.25s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+            }
+
+            &:after {
+                content: '';
+                position: absolute;
+                left: 0;
+                top: 0;
+                display: block;
+                width: 100%;
+                height: 100%;
+                background-color: white;
+                border-radius: 60px;
+                box-shadow: 0 0 8px rgba(0, 0, 0, .3);
+                animation: pulse-dot 1.25s cubic-bezier(0.455, 0.03, 0.515, 0.955) -.4s infinite;
+            }
+        }
+
+        @keyframes pulse-ring {
+            0% {
+                transform: scale(.33);
+            }
+
+            80%,
+            100% {
+                opacity: 0;
+            }
+        }
+
+        @keyframes pulse-dot {
+            0% {
+                transform: scale(.8);
+            }
+
+            50% {
+                transform: scale(1);
+            }
+
+            100% {
+                transform: scale(.8);
+            }
+        }
+
+        /* Absolute Center Spinner */
+        .loading {
+            position: fixed;
+            z-index: 999;
+            height: 2em;
+            width: 2em;
+            overflow: visible;
+            margin: auto;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+        }
+
+        /* Transparent Overlay */
+        .loading:before {
+            content: '';
+            display: block;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.3);
+        }
+
+        /* :not(:required) hides these rules from IE9 and below */
+        .loading:not(:required) {
+            /* hide "loading..." text */
+            font: 0/0 a;
+            color: transparent;
+            text-shadow: none;
+            background-color: transparent;
+            border: 0;
+        }
+
+        .loading:not(:required):after {
+            content: '';
+            display: block;
+            font-size: 10px;
+            width: 1em;
+            height: 1em;
+            margin-top: -0.5em;
+            -webkit-animation: spinner 1500ms infinite linear;
+            -moz-animation: spinner 1500ms infinite linear;
+            -ms-animation: spinner 1500ms infinite linear;
+            -o-animation: spinner 1500ms infinite linear;
+            animation: spinner 1500ms infinite linear;
+            border-radius: 0.5em;
+            -webkit-box-shadow: rgba(0, 0, 0, 0.75) 1.5em 0 0 0, rgba(0, 0, 0, 0.75) 1.1em 1.1em 0 0, rgba(0, 0, 0, 0.75) 0 1.5em 0 0, rgba(0, 0, 0, 0.75) -1.1em 1.1em 0 0, rgba(0, 0, 0, 0.5) -1.5em 0 0 0, rgba(0, 0, 0, 0.5) -1.1em -1.1em 0 0, rgba(0, 0, 0, 0.75) 0 -1.5em 0 0, rgba(0, 0, 0, 0.75) 1.1em -1.1em 0 0;
+            box-shadow: rgba(0, 0, 0, 0.75) 1.5em 0 0 0, rgba(0, 0, 0, 0.75) 1.1em 1.1em 0 0, rgba(0, 0, 0, 0.75) 0 1.5em 0 0, rgba(0, 0, 0, 0.75) -1.1em 1.1em 0 0, rgba(0, 0, 0, 0.75) -1.5em 0 0 0, rgba(0, 0, 0, 0.75) -1.1em -1.1em 0 0, rgba(0, 0, 0, 0.75) 0 -1.5em 0 0, rgba(0, 0, 0, 0.75) 1.1em -1.1em 0 0;
+        }
+
+        /* Animation */
+
+        @-webkit-keyframes spinner {
+            0% {
+                -webkit-transform: rotate(0deg);
+                -moz-transform: rotate(0deg);
+                -ms-transform: rotate(0deg);
+                -o-transform: rotate(0deg);
+                transform: rotate(0deg);
+            }
+
+            100% {
+                -webkit-transform: rotate(360deg);
+                -moz-transform: rotate(360deg);
+                -ms-transform: rotate(360deg);
+                -o-transform: rotate(360deg);
+                transform: rotate(360deg);
+            }
+        }
+
+        @-moz-keyframes spinner {
+            0% {
+                -webkit-transform: rotate(0deg);
+                -moz-transform: rotate(0deg);
+                -ms-transform: rotate(0deg);
+                -o-transform: rotate(0deg);
+                transform: rotate(0deg);
+            }
+
+            100% {
+                -webkit-transform: rotate(360deg);
+                -moz-transform: rotate(360deg);
+                -ms-transform: rotate(360deg);
+                -o-transform: rotate(360deg);
+                transform: rotate(360deg);
+            }
+        }
+
+        @-o-keyframes spinner {
+            0% {
+                -webkit-transform: rotate(0deg);
+                -moz-transform: rotate(0deg);
+                -ms-transform: rotate(0deg);
+                -o-transform: rotate(0deg);
+                transform: rotate(0deg);
+            }
+
+            100% {
+                -webkit-transform: rotate(360deg);
+                -moz-transform: rotate(360deg);
+                -ms-transform: rotate(360deg);
+                -o-transform: rotate(360deg);
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes spinner {
+            0% {
+                -webkit-transform: rotate(0deg);
+                -moz-transform: rotate(0deg);
+                -ms-transform: rotate(0deg);
+                -o-transform: rotate(0deg);
+                transform: rotate(0deg);
+            }
+
+            100% {
+                -webkit-transform: rotate(360deg);
+                -moz-transform: rotate(360deg);
+                -ms-transform: rotate(360deg);
+                -o-transform: rotate(360deg);
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Real-Time Transcription in Snowpark Containers</h1>
+
+    <div class="container">
+        <button id="recordButton" class="button">Record</button>
+        <button id="stopButton" class="button">Stop</button>
+        <button id="resetButton" class="button">Reset</button>
+        <button id="summaryButton" class="button">Generate Summary</button>
+
+        <div class="loading" style="display: none;">Processing with Snowflake Cortex...&#8230;</div>
+        <div id="summary" style="display: none;"></div>
+        <div id="transcript"></div>
+    </div>
+    <script>
+        let previousText = "";
+
+        function animateNewSentence(newSentence, append = false) {
+            const words = newSentence.split(' ');
+            const transcriptDiv = document.getElementById('transcript');
+            let targetElement;
+
+            if (append && transcriptDiv.firstChild) {
+                targetElement = transcriptDiv.firstChild;
+            } else {
+                targetElement = document.createElement('div');
+                transcriptDiv.insertBefore(targetElement, transcriptDiv.firstChild);
+            }
+
+            words.forEach((word, index) => {
+                setTimeout(() => {
+                    targetElement.innerText += word + ' ';
+                }, index * 50);
+            });
+        }
+
+        function pollTranscript() {
+            fetch('/transcript')
+                .then(response => response.text())
+                .then(text => {
+                    if (text.length > previousText.length) {
+                        const newText = text.slice(previousText.length);
+                        const previousEndsWithPartial = !/[.!?]$/.test(previousText);
+                        const newSentences = newText.split(/(?<!\w\.\w.)(?<![A-Z][a-z]\.)(?<=\.|\?|\!|\n) /);
+
+                        newSentences.forEach((sentence, index) => {
+                            if (index === 0 && previousEndsWithPartial) {
+                                animateNewSentence(sentence.trim(), true);
+                            } else {
+                                animateNewSentence(sentence.trim());
+                            }
+                        });
+
+                        previousText = text;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        }
+
+
+        setInterval(pollTranscript, 5000);
+
+        let mediaRecorder;
+        let activeStream;
+
+        const recordButton = document.getElementById('recordButton');
+        const stopButton = document.getElementById('stopButton');
+        const transcript = document.getElementById('transcript');
+        const resetButton = document.getElementById('resetButton');
+        const summaryButton = document.getElementById('summaryButton');
+
+        function startRecording(stream) {
+            mediaRecorder = new MediaRecorder(stream);
+            mediaRecorder.ondataavailable = function (event) {
+                if (event.data.size > 0) {
+                    const blob = new Blob([event.data], { type: 'audio/webm' });
+                    const formData = new FormData();
+                    formData.append('audio', blob);
+
+                    fetch('/audio_upload', {
+                        method: 'POST',
+                        body: formData
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            console.log('Server response:', data);
+                            pollTranscript();
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                        });
+                }
+            };
+            mediaRecorder.start();
+            // Stop recording after 5 seconds and restart
+            setTimeout(() => {
+                mediaRecorder.stop();
+                // Restart recording immediately
+                startRecording(stream);
+            }, 5000);
+        }
+
+        recordButton.addEventListener('click', function () {
+            navigator.mediaDevices.getUserMedia({ audio: true })
+                .then(function (stream) {
+                    activeStream = stream;
+                    startRecording(stream);
+                })
+                .catch(function (error) {
+                    console.error('Error:', error);
+                });
+        });
+
+        stopButton.addEventListener('click', function () {
+            mediaRecorder.stop();
+            activeStream.getTracks().forEach(track => track.stop()); // Stop the stream
+        });
+        resetButton.addEventListener('click', function () {
+            fetch('/reset', {
+                method: 'POST'
+            })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Server response:', data);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        });
+
+        summaryButton.addEventListener('click', function () {
+            document.querySelector('.loading').style.display = 'block';
+            fetch('/generate_summary', {
+                method: 'POST'
+            })
+                .then(response => response.json())
+                .then(data => {
+                    document.querySelector('.loading').style.display = 'none';
+                    // document.querySelector('.pulsating-circle').style.display = 'block';
+                    document.querySelector('#summary').style.display = 'block';
+                    // document.querySelector('#transcript').style.display = 'none';
+                    const summaryElement = document.querySelector('#summary');
+                    const summaryText = data.summary;
+                    const typingSpeed = 6000 / summaryText.length; // Adjust typing speed as needed
+
+                    let currentIndex = 0;
+
+                    function typeNextCharacter() {
+                        if (currentIndex < summaryText.length) {
+                            summaryElement.innerText += summaryText[currentIndex];
+                            currentIndex++;
+                            setTimeout(typeNextCharacter, typingSpeed);
+                        }
+                    }
+
+                    typeNextCharacter();
+
+                    // const audioPlayer = new Audio(data.audio_url);
+                    // audioPlayer.play();
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        });
+
+
+    </script>
+</body>
+
+</html>
